@@ -60,8 +60,18 @@ class CarListView(LoginRequiredMixin, generic.ListView):
     queryset = Car.objects.all().select_related("manufacturer")
 
 
-class CarDetailView(LoginRequiredMixin, generic.DetailView):
+class CarDetailView(DetailView):
     model = Car
+    template_name = "car_detail.html"
+
+    def post(self, request, *args, **kwargs):
+        car = self.get_object()
+        user = request.user
+        if "assign" in request.POST:
+            car.drivers.add(user)
+        elif "remove" in request.POST:
+            car.drivers.remove(user)
+        return redirect("car_detail", pk=car.pk)
 
 
 class CarCreateView(LoginRequiredMixin, generic.CreateView):
@@ -109,17 +119,3 @@ class DriverLicenseUpdateView(UpdateView):
     form_class = DriverLicenseUpdateForm
     template_name = "driver_license_update_form.html"
     success_url = reverse_lazy("driver_detail")
-
-
-class CarDetailView(DetailView):
-    model = Car
-    template_name = "car_detail.html"
-
-    def post(self, request, *args, **kwargs):
-        car = self.get_object()
-        user = request.user
-        if "assign" in request.POST:
-            car.drivers.add(user)
-        elif "remove" in request.POST:
-            car.drivers.remove(user)
-        return redirect("car_detail", pk=car.pk)
